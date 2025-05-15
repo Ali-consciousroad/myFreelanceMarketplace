@@ -1,0 +1,299 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model with Clerk authentication integration
+model User {
+  id            String    @id @default(cuid())
+  clerkId       String    @unique
+  email         String    @unique
+  firstName     String
+  lastName      String
+  profileImage  String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relationships
+  profile       Profile?
+  projects      Project[]  @relation("ProjectOwner")
+  proposals     Proposal[]
+  reviews       Review[]   @relation("Reviewer")
+  receivedReviews Review[] @relation("ReviewedUser")
+}
+
+// User profile with additional professional information
+model Profile {
+  id            String    @id @default(cuid())
+  userId        String    @unique
+  title         String
+  bio           String
+  hourlyRate    Float
+  skills        String[]
+  availability  String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relationships
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Project model for freelance opportunities
+model Project {
+  id            String    @id @default(cuid())
+  title         String
+  description   String
+  budget        Float
+  deadline      DateTime
+  status        String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relationships
+  ownerId       String
+  owner         User      @relation("ProjectOwner", fields: [ownerId], references: [id])
+  proposals     Proposal[]
+  category      Category  @relation(fields: [categoryId], references: [id])
+  categoryId    String
+}
+
+// Proposal model for freelancer applications
+model Proposal {
+  id            String    @id @default(cuid())
+  coverLetter   String
+  bidAmount     Float
+  status        String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relationships
+  projectId     String
+  project       Project   @relation(fields: [projectId], references: [id])
+  freelancerId  String
+  freelancer    User      @relation(fields: [freelancerId], references: [id])
+}
+
+// Review model for project feedback
+model Review {
+  id            String    @id @default(cuid())
+  rating        Int
+  comment       String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relationships
+  projectId     String
+  project       Project   @relation(fields: [projectId], references: [id])
+  reviewerId    String
+  reviewer      User      @relation("Reviewer", fields: [reviewerId], references: [id])
+  reviewedUserId String
+  reviewedUser  User      @relation("ReviewedUser", fields: [reviewedUserId], references: [id])
+}
+
+// Category model for project classification
+model Category {
+  id            String    @id @default(cuid())
+  name          String    @unique
+  description   String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relationships
+  projects      Project[]
+}
+
+model Freelance {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  firstName String
+  lastName  String
+  vat       String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user      User        @relation(fields: [userId], references: [id])
+  portfolio Portfolio[]
+  services  Service[]
+
+  @@map("freelances")
+}
+
+model Client {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  company   String
+  vat       String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user     User      @relation(fields: [userId], references: [id])
+  missions Mission[]
+
+  @@map("clients")
+}
+
+model Mission {
+  id          String        @id @default(uuid())
+  status      MissionStatus @default(OPEN)
+  dailyRate   Decimal       @db.Decimal(10, 2)
+  timeframe   Int // Duration in days
+  description String
+  clientId    String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // Relations
+  client     Client     @relation(fields: [clientId], references: [id])
+  contract   Contract?
+  payments   Payment[]
+  categories Category[]
+
+  @@map("missions")
+}
+
+model Contract {
+  id            String   @id @default(uuid())
+  contractTerms String
+  startDate     DateTime
+  endDate       DateTime
+  isActive      Boolean  @default(true)
+  missionId     String   @unique
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  mission Mission @relation(fields: [missionId], references: [id])
+
+  @@map("contracts")
+}
+
+model Payment {
+  id              String   @id @default(uuid())
+  amount          Decimal  @db.Decimal(15, 2)
+  currency        String   @default("EUR")
+  paymentMethod   String
+  transactionDate DateTime
+  missionId       String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  mission Mission @relation(fields: [missionId], references: [id])
+
+  @@map("payments")
+}
+
+model SmartContract {
+  contractAddress String   @id
+  creatorId       String
+  isActive        Boolean  @default(true)
+  balance         Decimal  @db.Decimal(20, 2)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  creator User @relation(fields: [creatorId], references: [id])
+
+  @@map("smart_contracts")
+}
+
+model Skill {
+  id               String           @id @default(uuid())
+  name             String           @unique
+  description      String?
+  proficiencyLevel ProficiencyLevel
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  // Relations
+  services Service[]
+
+  @@map("skills")
+}
+
+model Service {
+  id          String   @id @default(uuid())
+  name        String
+  price       Decimal  @db.Decimal(10, 2)
+  description String?
+  skillId     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  skill       Skill      @relation(fields: [skillId], references: [id])
+  Freelance   Freelance? @relation(fields: [freelanceId], references: [id])
+  freelanceId String?
+
+  @@map("services")
+}
+
+model Portfolio {
+  id          String   @id @default(uuid())
+  projectUrl  String?
+  name        String
+  description String?
+  freelanceId String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  freelance Freelance @relation(fields: [freelanceId], references: [id])
+
+  @@map("portfolios")
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  content   String
+  status    String
+  timestamp DateTime @default(now())
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("messages")
+}
+
+model Chatbot {
+  id        String   @id @default(uuid())
+  name      String
+  version   String
+  language  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("chatbots")
+}
+
+enum UserRole {
+  FREELANCER
+  CLIENT
+  ADMIN
+  SUPPORT
+}
+
+enum MissionStatus {
+  OPEN
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum ProficiencyLevel {
+  BEGINNER
+  INTERMEDIATE
+  EXPERT
+}
