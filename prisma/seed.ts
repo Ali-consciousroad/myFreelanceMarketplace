@@ -5,135 +5,189 @@ const prisma = new PrismaClient()
 
 // Main seeding function
 async function main() {
-  // Create categories first as they are referenced by projects
+  // Create users with their related models
+  const users = await Promise.all([
+    prisma.user.create({
+      data: {
+        login: 'john.doe',
+        password: await hash('password123', 10),
+        address: '123 Main St',
+        bankAccount: 'FR123456789',
+        walletAddress: '0x123...',
+        phoneNumber: '+33612345678',
+        role: UserRole.FREELANCER,
+        freelance: {
+          create: {
+            firstName: 'John',
+            lastName: 'Doe',
+            vat: 'FR12345678900'
+          }
+        }
+      },
+      include: {
+        freelance: true,
+        client: true
+      }
+    }),
+    prisma.user.create({
+      data: {
+        login: 'company.inc',
+        password: await hash('password123', 10),
+        address: '456 Business Ave',
+        bankAccount: 'FR987654321',
+        walletAddress: '0x456...',
+        phoneNumber: '+33687654321',
+        role: UserRole.CLIENT,
+        client: {
+          create: {
+            company: 'Tech Solutions Inc',
+            vat: 'FR98765432100'
+          }
+        }
+      },
+      include: {
+        freelance: true,
+        client: true
+      }
+    })
+  ])
+
+  // Create categories
   const categories = await Promise.all([
     prisma.category.create({
       data: {
         name: 'Web Development',
-        description: 'Projects related to website and web application development'
+        description: 'Web development projects and services'
       }
     }),
     prisma.category.create({
       data: {
         name: 'Mobile Development',
-        description: 'Projects related to mobile app development'
-      }
-    }),
-    prisma.category.create({
-      data: {
-        name: 'UI/UX Design',
-        description: 'Projects related to user interface and experience design'
+        description: 'Mobile app development projects'
       }
     })
   ])
 
-  // Create users with their profiles
-  const users = await Promise.all([
-    prisma.user.create({
+  // Create skills
+  const skills = await Promise.all([
+    prisma.skill.create({
       data: {
-        clerkId: 'user_1',
-        email: 'john@example.com',
-        firstName: 'John',
-        lastName: 'Doe',
-        profile: {
-          create: {
-            title: 'Senior Web Developer',
-            bio: 'Full-stack developer with 5 years of experience',
-            hourlyRate: 50,
-            skills: ['React', 'Node.js', 'TypeScript'],
-            availability: 'Full-time'
-          }
-        }
+        name: 'React',
+        description: 'React.js development',
+        proficiencyLevel: ProficiencyLevel.EXPERT
       }
     }),
-    prisma.user.create({
+    prisma.skill.create({
       data: {
-        clerkId: 'user_2',
-        email: 'jane@example.com',
-        firstName: 'Jane',
-        lastName: 'Smith',
-        profile: {
-          create: {
-            title: 'UI/UX Designer',
-            bio: 'Creative designer with a passion for user-centered design',
-            hourlyRate: 45,
-            skills: ['Figma', 'Adobe XD', 'Sketch'],
-            availability: 'Part-time'
-          }
-        }
+        name: 'Node.js',
+        description: 'Node.js backend development',
+        proficiencyLevel: ProficiencyLevel.INTERMEDIATE
       }
     })
   ])
 
-  // Create projects
-  const projects = await Promise.all([
-    prisma.project.create({
-      data: {
-        title: 'E-commerce Website',
-        description: 'Build a modern e-commerce platform',
-        budget: 5000,
-        deadline: new Date('2024-12-31'),
-        status: 'OPEN',
-        ownerId: users[0].id,
-        categoryId: categories[0].id
-      }
-    }),
-    prisma.project.create({
-      data: {
-        title: 'Mobile App Design',
-        description: 'Design a fitness tracking app',
-        budget: 3000,
-        deadline: new Date('2024-11-30'),
-        status: 'OPEN',
-        ownerId: users[1].id,
-        categoryId: categories[2].id
-      }
-    })
-  ])
-
-  // Create proposals
+  // Create services
   await Promise.all([
-    prisma.proposal.create({
+    prisma.service.create({
       data: {
-        coverLetter: 'I have extensive experience in e-commerce development',
-        bidAmount: 4500,
-        status: 'PENDING',
-        projectId: projects[0].id,
-        freelancerId: users[1].id
+        name: 'Web Development',
+        price: 500,
+        description: 'Full-stack web development services',
+        skillId: skills[0].id,
+        freelanceId: users[0].freelance!.id
       }
     }),
-    prisma.proposal.create({
+    prisma.service.create({
       data: {
-        coverLetter: 'I specialize in mobile app design',
-        bidAmount: 2800,
-        status: 'PENDING',
-        projectId: projects[1].id,
-        freelancerId: users[0].id
+        name: 'API Development',
+        price: 400,
+        description: 'RESTful API development',
+        skillId: skills[1].id,
+        freelanceId: users[0].freelance!.id
       }
     })
   ])
 
-  // Create reviews
+  // Create portfolio
+  await prisma.portfolio.create({
+    data: {
+      name: 'E-commerce Platform',
+      description: 'A modern e-commerce platform built with Next.js',
+      projectUrl: 'https://github.com/johndoe/ecommerce',
+      freelanceId: users[0].freelance!.id
+    }
+  })
+
+  // Create mission
+  const mission = await prisma.mission.create({
+    data: {
+      status: MissionStatus.OPEN,
+      dailyRate: 500,
+      timeframe: 30, // 30 days
+      description: 'Build a modern e-commerce platform',
+      clientId: users[1].client!.id,
+      categories: {
+        connect: categories.map(cat => ({ id: cat.id }))
+      }
+    }
+  })
+
+  // Create contract
+  await prisma.contract.create({
+    data: {
+      contractTerms: 'Standard freelance contract terms',
+      startDate: new Date(),
+      endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+      missionId: mission.id
+    }
+  })
+
+  // Create payment
+  await prisma.payment.create({
+    data: {
+      amount: 15000,
+      currency: 'EUR',
+      paymentMethod: 'Bank Transfer',
+      transactionDate: new Date(),
+      missionId: mission.id
+    }
+  })
+
+  // Create smart contract
+  await prisma.smartContract.create({
+    data: {
+      contractAddress: '0x789...',
+      creatorId: users[0].id,
+      balance: 1000
+    }
+  })
+
+  // Create messages
   await Promise.all([
-    prisma.review.create({
+    prisma.message.create({
       data: {
-        rating: 5,
-        comment: 'Excellent work on the project!',
-        projectId: projects[0].id,
-        reviewerId: users[0].id,
-        reviewedUserId: users[1].id
+        content: 'Hello, I am interested in your project',
+        status: 'SENT',
+        userId: users[0].id
       }
     }),
-    prisma.review.create({
+    prisma.message.create({
       data: {
-        rating: 4,
-        comment: 'Great communication and delivery',
-        projectId: projects[1].id,
-        reviewerId: users[1].id,
-        reviewedUserId: users[0].id
+        content: 'Thank you for your interest',
+        status: 'SENT',
+        userId: users[1].id
       }
     })
   ])
+
+  // Create chatbot
+  await prisma.chatbot.create({
+    data: {
+      name: 'Support Bot',
+      version: '1.0.0',
+      language: 'en'
+    }
+  })
 
   console.log('Database has been seeded. 🌱')
 }
