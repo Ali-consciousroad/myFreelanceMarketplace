@@ -3,11 +3,19 @@ import { auth } from "@clerk/nextjs/server";
 import prisma from "@/lib/prisma";
 
 // GET /api/missions - List all missions
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const { userId } = auth();
     if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return new NextResponse(
+        JSON.stringify({ error: "Unauthorized" }),
+        { 
+          status: 401,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
     }
 
     const missions = await prisma.mission.findMany({
@@ -23,12 +31,25 @@ export async function GET() {
       },
     });
 
-    return NextResponse.json(missions);
+    return new NextResponse(
+      JSON.stringify(missions),
+      { 
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
   } catch (error) {
     console.error("Error fetching missions:", error);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 },
+    return new NextResponse(
+      JSON.stringify({ error: "Internal Server Error" }),
+      { 
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
     );
   }
 }
@@ -38,29 +59,43 @@ export async function POST(request: Request) {
   try {
     const { userId } = auth();
     if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return new NextResponse(
+        JSON.stringify({ error: "Unauthorized" }),
+        { 
+          status: 401,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
     }
 
     const body = await request.json();
-    const { status, dailyRate, timeframe, description, clientId, categoryIds } =
-      body;
+    const { status, dailyRate, timeframe, description, clientId, categoryIds } = body;
 
     // Validate required fields
     if (!description || !dailyRate || !timeframe || !clientId) {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 },
+      return new NextResponse(
+        JSON.stringify({ error: "Missing required fields" }),
+        { 
+          status: 400,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
       );
     }
 
     // Create the mission
     const mission = await prisma.mission.create({
       data: {
-        status: status || "OPEN",
+        status,
         dailyRate,
         timeframe,
         description,
-        clientId,
+        client: {
+          connect: { id: clientId },
+        },
         categories: {
           connect: categoryIds?.map((id: string) => ({ id })) || [],
         },
@@ -75,12 +110,25 @@ export async function POST(request: Request) {
       },
     });
 
-    return NextResponse.json(mission, { status: 201 });
+    return new NextResponse(
+      JSON.stringify(mission),
+      { 
+        status: 201,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
   } catch (error) {
     console.error("Error creating mission:", error);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 },
+    return new NextResponse(
+      JSON.stringify({ error: "Internal Server Error" }),
+      { 
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
     );
   }
 }

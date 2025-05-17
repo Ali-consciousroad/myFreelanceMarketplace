@@ -10,7 +10,15 @@ export async function GET(
   try {
     const { userId } = auth();
     if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return new NextResponse(
+        JSON.stringify({ error: "Unauthorized" }),
+        { 
+          status: 401,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
     }
 
     const mission = await prisma.mission.findUnique({
@@ -28,15 +36,36 @@ export async function GET(
     });
 
     if (!mission) {
-      return NextResponse.json({ error: "Mission not found" }, { status: 404 });
+      return new NextResponse(
+        JSON.stringify({ error: "Mission not found" }),
+        { 
+          status: 404,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
     }
 
-    return NextResponse.json(mission);
+    return new NextResponse(
+      JSON.stringify(mission),
+      { 
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
   } catch (error) {
     console.error("Error fetching mission:", error);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 },
+    return new NextResponse(
+      JSON.stringify({ error: "Internal Server Error" }),
+      { 
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
     );
   }
 }
@@ -49,7 +78,15 @@ export async function PUT(
   try {
     const { userId } = auth();
     if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return new NextResponse(
+        JSON.stringify({ error: "Unauthorized" }),
+        { 
+          status: 401,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
     }
 
     const body = await request.json();
@@ -76,12 +113,25 @@ export async function PUT(
       },
     });
 
-    return NextResponse.json(mission);
+    return new NextResponse(
+      JSON.stringify(mission),
+      { 
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
   } catch (error) {
     console.error("Error updating mission:", error);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 },
+    return new NextResponse(
+      JSON.stringify({ error: "Internal Server Error" }),
+      { 
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
     );
   }
 }
@@ -94,7 +144,15 @@ export async function DELETE(
   try {
     const { userId } = auth();
     if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return new NextResponse(
+        JSON.stringify({ error: "Unauthorized" }),
+        { 
+          status: 401,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
     }
 
     // First, check if the mission exists
@@ -108,7 +166,15 @@ export async function DELETE(
     });
 
     if (!mission) {
-      return NextResponse.json({ error: "Mission not found" }, { status: 404 });
+      return new NextResponse(
+        JSON.stringify({ error: "Mission not found" }),
+        { 
+          status: 404,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
     }
 
     console.log("Found mission:", mission);
@@ -137,19 +203,37 @@ export async function DELETE(
         where: { id: params.id },
       });
 
-      return NextResponse.json({ message: "Mission deleted successfully" });
+      return new NextResponse(
+        JSON.stringify({ message: "Mission deleted successfully" }),
+        { 
+          status: 200,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
     } catch (deleteError: any) {
       console.error("Error during deletion:", deleteError);
-      return NextResponse.json(
-        { error: `Error during deletion: ${deleteError.message}` },
-        { status: 500 },
+      return new NextResponse(
+        JSON.stringify({ error: `Error during deletion: ${deleteError.message}` }),
+        { 
+          status: 500,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
       );
     }
   } catch (error: any) {
     console.error("Error in DELETE operation:", error);
-    return NextResponse.json(
-      { error: `Internal Server Error: ${error.message}` },
-      { status: 500 },
+    return new NextResponse(
+      JSON.stringify({ error: `Internal Server Error: ${error.message}` }),
+      { 
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
     );
   }
 }
