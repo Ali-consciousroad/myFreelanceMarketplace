@@ -1,4 +1,11 @@
 // This is your Prisma schema file,
+/* 
+The Prisma Schema (or schema for short) is the main method of configuration for your Prisma ORM setup. 
+    It consists of the following parts:
+    Data sources: Specify the details of the data sources Prisma ORM should connect to (e.g. a PostgreSQL database)
+    Generators: Specifies what clients should be generated based on the data model (e.g. Prisma Client)
+    Data model definition: Specifies your application models (the shape of the data per data source) and their relations
+*/
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {

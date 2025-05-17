@@ -14,13 +14,13 @@ export async function GET() {
       include: {
         client: {
           include: {
-            user: true
-          }
+            user: true,
+          },
         },
         categories: true,
         contract: true,
-        payments: true
-      }
+        payments: true,
+      },
     });
 
     return NextResponse.json(missions);
@@ -28,7 +28,7 @@ export async function GET() {
     console.error("Error fetching missions:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -42,20 +42,14 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { 
-      status,
-      dailyRate,
-      timeframe,
-      description,
-      clientId,
-      categoryIds 
-    } = body;
+    const { status, dailyRate, timeframe, description, clientId, categoryIds } =
+      body;
 
     // Validate required fields
     if (!description || !dailyRate || !timeframe || !clientId) {
       return NextResponse.json(
         { error: "Missing required fields" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -68,17 +62,17 @@ export async function POST(request: Request) {
         description,
         clientId,
         categories: {
-          connect: categoryIds?.map((id: string) => ({ id })) || []
-        }
+          connect: categoryIds?.map((id: string) => ({ id })) || [],
+        },
       },
       include: {
         client: {
           include: {
-            user: true
-          }
+            user: true,
+          },
         },
-        categories: true
-      }
+        categories: true,
+      },
     });
 
     return NextResponse.json(mission, { status: 201 });
@@ -86,7 +80,7 @@ export async function POST(request: Request) {
     console.error("Error creating mission:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
-} 
+}

@@ -90,6 +90,13 @@ https://github.com/user-attachments/assets/aef3c099-e371-43bf-b426-f5ba73185a7c
 
 - [Vercel Analytics](https://vercel.com/analytics) – Track unique visitors, pageviews, and more in a privacy-friendly way
 
+###
+
+Visual Database UI to interact with PostgreSQL through a clean interface
+Start prisma studio:
+
+npx prisma studio
+
 ## Author
 
-- Steven Tey ([@steventey](https://twitter.com/steventey))
+- Ali Dindar
