@@ -1,13 +1,3 @@
-// This is your Prisma schema file,
-/* 
-The Prisma Schema (or schema for short) is the main method of configuration for your Prisma ORM setup. 
-    It consists of the following parts:
-    Data sources: Specify the details of the data sources Prisma ORM should connect to (e.g. a PostgreSQL database)
-    Generators: Specifies what clients should be generated based on the data model (e.g. Prisma Client)
-    Data model definition: Specifies your application models (the shape of the data per data source) and their relations
-*/
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -17,7 +7,184 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Enums for type safety
+model User {
+  id             String          @id @default(uuid())
+  login          String          @unique
+  password       String
+  address        String?         @db.VarChar(255)
+  bankAccount    String?         @db.VarChar(255)
+  walletAddress  String?         @db.VarChar(255)
+  phoneNumber    String?         @db.VarChar(15)
+  role           UserRole        @default(CLIENT)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  clerkId        String?         @unique
+  client         Client?
+  freelance      Freelance?
+  messages       Message[]
+  smartContracts SmartContract[]
+}
+
+model Freelance {
+  id        String      @id @default(uuid())
+  userId    String      @unique
+  firstName String      @db.VarChar(255)
+  lastName  String      @db.VarChar(255)
+  vat       String?     @db.VarChar(50)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  user      User        @relation(fields: [userId], references: [id])
+  portfolio Portfolio[]
+  services  Service[]
+
+  @@map("freelances")
+}
+
+model Client {
+  id        String    @id @default(uuid())
+  userId    String    @unique
+  company   String    @db.VarChar(255)
+  vat       String?   @db.VarChar(50)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  user      User      @relation(fields: [userId], references: [id])
+  missions  Mission[]
+
+  @@map("clients")
+}
+
+model Mission {
+  id          String        @id @default(uuid())
+  status      MissionStatus @default(OPEN)
+  dailyRate   Decimal       @db.Decimal(10, 2)
+  timeframe   Int
+  description String
+  clientId    String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  contract    Contract?
+  client      Client        @relation(fields: [clientId], references: [id])
+  payments    Payment[]
+  categories  Category[]    @relation("CategoryToMission")
+
+  @@map("missions")
+}
+
+model Contract {
+  id            String   @id @default(uuid())
+  contractTerms String
+  startDate     DateTime
+  endDate       DateTime
+  isActive      Boolean  @default(true)
+  missionId     String   @unique
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  mission       Mission  @relation(fields: [missionId], references: [id])
+
+  @@map("contracts")
+}
+
+model Payment {
+  id              String   @id @default(uuid())
+  amount          Decimal  @db.Decimal(15, 2)
+  currency        String   @default("EUR")
+  paymentMethod   String   @db.VarChar(50)
+  transactionDate DateTime
+  missionId       String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  mission         Mission  @relation(fields: [missionId], references: [id])
+
+  @@map("payments")
+}
+
+model SmartContract {
+  contractAddress String   @id
+  creatorId       String
+  isActive        Boolean  @default(true)
+  balance         Decimal  @db.Decimal(20, 2)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  creator         User     @relation(fields: [creatorId], references: [id])
+
+  @@map("smart_contracts")
+}
+
+model Category {
+  id          String    @id @default(uuid())
+  name        String    @unique @db.VarChar(255)
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  missions    Mission[] @relation("CategoryToMission")
+
+  @@map("categories")
+}
+
+model Skill {
+  id               String           @id @default(uuid())
+  name             String           @unique @db.VarChar(255)
+  description      String?
+  proficiencyLevel ProficiencyLevel
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  services         Service[]
+
+  @@map("skills")
+}
+
+model Service {
+  id          String     @id @default(uuid())
+  name        String     @db.VarChar(255)
+  price       Decimal    @db.Decimal(10, 2)
+  description String?
+  skillId     String
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  freelanceId String?
+  Freelance   Freelance? @relation(fields: [freelanceId], references: [id])
+  skill       Skill      @relation(fields: [skillId], references: [id])
+
+  @@map("services")
+}
+
+model Portfolio {
+  id          String    @id @default(uuid())
+  projectUrl  String?   @db.VarChar(255)
+  name        String    @db.VarChar(255)
+  description String?
+  freelanceId String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  freelance   Freelance @relation(fields: [freelanceId], references: [id])
+
+  @@map("portfolios")
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  content   String
+  status    String   @db.VarChar(50)
+  timestamp DateTime @default(now())
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("messages")
+}
+
+model Chatbot {
+  id        String   @id @default(uuid())
+  name      String   @db.VarChar(255)
+  version   String   @db.VarChar(50)
+  language  String   @db.VarChar(50)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("chatbots")
+}
+
 enum UserRole {
   FREELANCER
   CLIENT
@@ -36,219 +203,4 @@ enum ProficiencyLevel {
   BEGINNER
   INTERMEDIATE
   EXPERT
-}
-
-// User model with authentication
-model User {
-  id            String    @id @default(uuid())
-  clerkId       String    @unique
-  login         String    @unique
-  password      String
-  address       String?   @db.VarChar(255)
-  bankAccount   String?   @db.VarChar(255)
-  walletAddress String?   @db.VarChar(255)
-  phoneNumber   String?   @db.VarChar(15)
-  role          UserRole  @default(CLIENT)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  // Relations
-  freelance     Freelance?
-  client        Client?
-  messages      Message[]
-  smartContracts SmartContract[]
-}
-
-// Freelance model
-model Freelance {
-  id        String   @id @default(uuid())
-  userId    String   @unique
-  firstName String   @db.VarChar(255)
-  lastName  String   @db.VarChar(255)
-  vat       String?  @db.VarChar(50)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  user      User        @relation(fields: [userId], references: [id])
-  portfolio Portfolio[]
-  services  Service[]
-
-  @@map("freelances")
-}
-
-// Client model
-model Client {
-  id        String   @id @default(uuid())
-  userId    String   @unique
-  company   String   @db.VarChar(255)
-  vat       String?  @db.VarChar(50)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  user     User      @relation(fields: [userId], references: [id])
-  missions Mission[]
-
-  @@map("clients")
-}
-
-// Mission model
-model Mission {
-  id          String        @id @default(uuid())
-  status      MissionStatus @default(OPEN)
-  dailyRate   Decimal       @db.Decimal(10, 2)
-  timeframe   Int          // Duration in days
-  description String        @db.Text
-  clientId    String
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-
-  // Relations
-  client     Client     @relation(fields: [clientId], references: [id])
-  contract   Contract?
-  payments   Payment[]
-  categories Category[]
-
-  @@map("missions")
-}
-
-// Contract model
-model Contract {
-  id            String   @id @default(uuid())
-  contractTerms String   @db.Text
-  startDate     DateTime
-  endDate       DateTime
-  isActive      Boolean  @default(true)
-  missionId     String   @unique
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  // Relations
-  mission Mission @relation(fields: [missionId], references: [id])
-
-  @@map("contracts")
-}
-
-// Payment model
-model Payment {
-  id              String   @id @default(uuid())
-  amount          Decimal  @db.Decimal(15, 2)
-  currency        String   @default("EUR")
-  paymentMethod   String   @db.VarChar(50)
-  transactionDate DateTime
-  missionId       String
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  // Relations
-  mission Mission @relation(fields: [missionId], references: [id])
-
-  @@map("payments")
-}
-
-// SmartContract model
-model SmartContract {
-  contractAddress String   @id
-  creatorId       String
-  isActive        Boolean  @default(true)
-  balance         Decimal  @db.Decimal(20, 2)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  // Relations
-  creator User @relation(fields: [creatorId], references: [id])
-
-  @@map("smart_contracts")
-}
-
-// Category model
-model Category {
-  id          String   @id @default(uuid())
-  name        String   @unique @db.VarChar(255)
-  description String?  @db.Text
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relations
-  missions    Mission[]
-
-  @@map("categories")
-}
-
-// Skill model
-model Skill {
-  id               String           @id @default(uuid())
-  name             String           @unique @db.VarChar(255)
-  description      String?          @db.Text
-  proficiencyLevel ProficiencyLevel
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
-
-  // Relations
-  services Service[]
-
-  @@map("skills")
-}
-
-// Service model
-model Service {
-  id          String   @id @default(uuid())
-  name        String   @db.VarChar(255)
-  price       Decimal  @db.Decimal(10, 2)
-  description String?  @db.Text
-  skillId     String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relations
-  skill       Skill      @relation(fields: [skillId], references: [id])
-  Freelance   Freelance? @relation(fields: [freelanceId], references: [id])
-  freelanceId String?
-
-  @@map("services")
-}
-
-// Portfolio model
-model Portfolio {
-  id          String   @id @default(uuid())
-  projectUrl  String?  @db.VarChar(255)
-  name        String   @db.VarChar(255)
-  description String?  @db.Text
-  freelanceId String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relations
-  freelance Freelance @relation(fields: [freelanceId], references: [id])
-
-  @@map("portfolios")
-}
-
-// Message model
-model Message {
-  id        String   @id @default(uuid())
-  content   String   @db.Text
-  status    String   @db.VarChar(50)
-  timestamp DateTime @default(now())
-  userId    String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  user User @relation(fields: [userId], references: [id])
-
-  @@map("messages")
-}
-
-// Chatbot model
-model Chatbot {
-  id        String   @id @default(uuid())
-  name      String   @db.VarChar(255)
-  version   String   @db.VarChar(50)
-  language  String   @db.VarChar(50)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("chatbots")
 }

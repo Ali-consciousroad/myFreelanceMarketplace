@@ -4,16 +4,14 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const user = await prisma.user.findUnique({
-      where: { clerkId: userId },
-      select: {
-        id: true,
-        role: true,
+      where: { id: userId },
+      include: {
         client: true,
         freelance: true
       }

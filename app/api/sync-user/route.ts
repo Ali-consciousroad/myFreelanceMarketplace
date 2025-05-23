@@ -4,14 +4,14 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({ 
-      where: { clerkId: userId },
+      where: { id: userId }, // Using id instead of clerkId for now
       include: {
         client: true,
         freelance: true
@@ -22,7 +22,7 @@ export async function GET() {
       // Create new user with default role
       const newUser = await prisma.user.create({
         data: {
-          clerkId: userId,
+          id: userId, // Using userId as the id
           login: `user-${userId}`,
           password: 'placeholder', // We'll handle this differently in production
           role: 'CLIENT', // Default role
