@@ -41,6 +41,7 @@ enum ProficiencyLevel {
 // User model with authentication
 model User {
   id            String    @id @default(uuid())
+  clerkId       String    @unique
   login         String    @unique
   password      String
   address       String?   @db.VarChar(255)
