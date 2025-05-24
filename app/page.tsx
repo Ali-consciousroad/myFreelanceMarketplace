@@ -16,9 +16,9 @@ export default function Home() {
   // Fetch stars count
   useEffect(() => {
     fetch("https://api.github.com/repos/steven-tey/precedent")
-      .then((res) => res.json())
+    .then((res) => res.json())
       .then((data) => setStars(data.stargazers_count))
-      .catch((e) => console.log(e));
+    .catch((e) => console.log(e));
   }, []);
 
   return (

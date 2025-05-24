@@ -2,56 +2,32 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import prisma from "@/lib/prisma";
+import prisma, { getUserWithRoleByClerkId } from "@/lib/prisma";
+import { getAuth } from '@clerk/nextjs/server';
+import { NextRequest } from 'next/server';
 
 // GET /api/missions - List all missions
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
-    const { userId } = auth();
+    const { userId } = await getAuth(request);
+
     if (!userId) {
-      return new NextResponse(
-        JSON.stringify({ error: "Unauthorized" }),
-        { 
-          status: 401,
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const missions = await prisma.mission.findMany({
       include: {
-        client: {
-          include: {
-            user: true,
-          },
-        },
+        client: true,
         categories: true,
-        contract: true,
-        payments: true,
       },
     });
 
-    return new NextResponse(
-      JSON.stringify(missions),
-      { 
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    return NextResponse.json(missions);
   } catch (error) {
-    console.error("Error fetching missions:", error);
-    return new NextResponse(
-      JSON.stringify({ error: "Internal Server Error" }),
-      { 
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
+    console.error('Error fetching missions:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch missions' },
+      { status: 500 }
     );
   }
 }
@@ -59,12 +35,18 @@ export async function GET(request: Request) {
 // POST /api/missions - Create a new mission
 export async function POST(request: Request) {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
     if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Fetch user and check role
+    const user = await getUserWithRoleByClerkId(userId);
+    if (!user || (user.role !== "CLIENT" && user.role !== "ADMIN")) {
       return new NextResponse(
-        JSON.stringify({ error: "Unauthorized" }),
-        { 
-          status: 401,
+        JSON.stringify({ error: "Forbidden: Only clients or admins can create missions" }),
+        {
+          status: 403,
           headers: {
             'Content-Type': 'application/json',
           },

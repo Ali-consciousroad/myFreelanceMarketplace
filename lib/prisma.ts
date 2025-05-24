@@ -19,3 +19,17 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 export default prisma;
+
+// Utility to get user and role by Clerk user ID
+export async function getUserWithRoleByClerkId(clerkUserId: string) {
+  return prisma.user.findUnique({
+    where: { id: clerkUserId },
+    select: {
+      id: true,
+      role: true,
+      client: true,
+      freelance: true,
+    },
+  });
+}
+ 

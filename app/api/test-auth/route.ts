@@ -1,43 +1,24 @@
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+import { auth } from '@clerk/nextjs/server';
+import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
     if (!userId) {
-      return new NextResponse(
-        JSON.stringify({ error: "Unauthorized" }),
-        { 
-          status: 401,
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Return the user ID for testing
-    return new NextResponse(
-      JSON.stringify({ userId }),
-      { 
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    return NextResponse.json({ 
+      message: 'Authentication successful',
+      userId 
+    });
   } catch (error) {
-    console.error("Error in test auth:", error);
-    return new NextResponse(
-      JSON.stringify({ error: "Internal Server Error" }),
-      { 
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
+    console.error('Auth test error:', error);
+    return NextResponse.json(
+      { error: 'Authentication failed' },
+      { status: 500 }
     );
   }
 }

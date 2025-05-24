@@ -57,20 +57,32 @@ async function main() {
     }),
   ]);
 
-  // Create categories
+  // Create or get categories
   const categories = await Promise.all([
-    prisma.category.create({
-      data: {
-        name: "Web Development",
-        description: "Web development projects and services",
-      },
+    prisma.category.upsert({
+      where: { name: 'Web Development' },
+      update: {},
+      create: {
+        name: 'Web Development',
+        description: 'Frontend and backend web development projects'
+      }
     }),
-    prisma.category.create({
-      data: {
-        name: "Mobile Development",
-        description: "Mobile app development projects",
-      },
+    prisma.category.upsert({
+      where: { name: 'Mobile Development' },
+      update: {},
+      create: {
+        name: 'Mobile Development',
+        description: 'iOS and Android app development'
+      }
     }),
+    prisma.category.upsert({
+      where: { name: 'UI/UX Design' },
+      update: {},
+      create: {
+        name: 'UI/UX Design',
+        description: 'User interface and experience design'
+      }
+    })
   ]);
 
   // Create skills
@@ -123,19 +135,72 @@ async function main() {
     },
   });
 
-  // Create mission
-  const mission = await prisma.mission.create({
-    data: {
-      status: MissionStatus.OPEN,
-      dailyRate: 500,
-      timeframe: 30, // 30 days
-      description: "Build a modern e-commerce platform",
-      clientId: users[1].client!.id,
-      categories: {
-        connect: categories.map((cat) => ({ id: cat.id })),
-      },
+  // Create or get test client
+  const client = await prisma.client.upsert({
+    where: { 
+      userId: (await prisma.user.findUnique({
+        where: { login: 'techcorp' }
+      }))?.id || ''
     },
+    update: {},
+    create: {
+      company: 'TechCorp Inc.',
+      vat: 'FR12345678900',
+      user: {
+        create: {
+          login: 'techcorp',
+          password: 'placeholder',
+          role: 'CLIENT'
+        }
+      }
+    }
   });
+
+  // Create test missions
+  const missions = await Promise.all([
+    prisma.mission.create({
+      data: {
+        status: 'OPEN',
+        dailyRate: 500,
+        timeframe: 30,
+        description: 'Build a modern e-commerce platform with Next.js and Stripe integration',
+        client: {
+          connect: { id: client.id }
+        },
+        categories: {
+          connect: [{ id: categories[0].id }]
+        }
+      }
+    }),
+    prisma.mission.create({
+      data: {
+        status: 'IN_PROGRESS',
+        dailyRate: 450,
+        timeframe: 45,
+        description: 'Develop a cross-platform mobile app for food delivery service',
+        client: {
+          connect: { id: client.id }
+        },
+        categories: {
+          connect: [{ id: categories[1].id }]
+        }
+      }
+    }),
+    prisma.mission.create({
+      data: {
+        status: 'OPEN',
+        dailyRate: 400,
+        timeframe: 20,
+        description: 'Redesign the user interface for our SaaS platform',
+        client: {
+          connect: { id: client.id }
+        },
+        categories: {
+          connect: [{ id: categories[2].id }]
+        }
+      }
+    })
+  ]);
 
   // Create contract
   await prisma.contract.create({
@@ -143,7 +208,7 @@ async function main() {
       contractTerms: "Standard freelance contract terms",
       startDate: new Date(),
       endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
-      missionId: mission.id,
+      missionId: missions[0].id,
     },
   });
 
@@ -154,7 +219,7 @@ async function main() {
       currency: "EUR",
       paymentMethod: "Bank Transfer",
       transactionDate: new Date(),
-      missionId: mission.id,
+      missionId: missions[0].id,
     },
   });
 
@@ -194,7 +259,7 @@ async function main() {
     },
   });
 
-  console.log("Database has been seeded. 🌱");
+  console.log('Seed data created:', { categories, client, missions });
 }
 
 // Execute seeding and handle errors

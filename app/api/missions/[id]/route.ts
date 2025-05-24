@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import prisma from "@/lib/prisma";
+import prisma, { getUserWithRoleByClerkId } from "@/lib/prisma";
 
 // GET /api/missions/[id] - Get a single mission
 export async function GET(
@@ -10,17 +10,9 @@ export async function GET(
   { params }: { params: { id: string } },
 ) {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
     if (!userId) {
-      return new NextResponse(
-        JSON.stringify({ error: "Unauthorized" }),
-        { 
-          status: 401,
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const mission = await prisma.mission.findUnique({
@@ -78,12 +70,33 @@ export async function PUT(
   { params }: { params: { id: string } },
 ) {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
     if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Fetch user and check role/ownership
+    const user = await getUserWithRoleByClerkId(userId);
+    const mission = await prisma.mission.findUnique({
+      where: { id: params.id },
+      include: { client: true },
+    });
+    if (!mission) {
       return new NextResponse(
-        JSON.stringify({ error: "Unauthorized" }),
+        JSON.stringify({ error: "Mission not found" }),
         { 
-          status: 401,
+          status: 404,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+    }
+    if (!user || (user.role !== "ADMIN" && (!user.client || user.client.id !== mission.clientId))) {
+      return new NextResponse(
+        JSON.stringify({ error: "Forbidden: Only the owning client or admin can update this mission" }),
+        {
+          status: 403,
           headers: {
             'Content-Type': 'application/json',
           },
@@ -94,7 +107,7 @@ export async function PUT(
     const body = await request.json();
     const { status, dailyRate, timeframe, description, categoryIds } = body;
 
-    const mission = await prisma.mission.update({
+    const updatedMission = await prisma.mission.update({
       where: { id: params.id },
       data: {
         status,
@@ -116,7 +129,7 @@ export async function PUT(
     });
 
     return new NextResponse(
-      JSON.stringify(mission),
+      JSON.stringify(updatedMission),
       { 
         status: 200,
         headers: {
@@ -144,29 +157,17 @@ export async function DELETE(
   { params }: { params: { id: string } },
 ) {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
     if (!userId) {
-      return new NextResponse(
-        JSON.stringify({ error: "Unauthorized" }),
-        { 
-          status: 401,
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // First, check if the mission exists
+    // Fetch user and check role/ownership
+    const user = await getUserWithRoleByClerkId(userId);
     const mission = await prisma.mission.findUnique({
       where: { id: params.id },
-      include: {
-        payments: true,
-        contract: true,
-        categories: true,
-      },
+      include: { client: true, payments: true, contract: true, categories: true },
     });
-
     if (!mission) {
       return new NextResponse(
         JSON.stringify({ error: "Mission not found" }),
@@ -178,33 +179,30 @@ export async function DELETE(
         }
       );
     }
-
-    console.log("Found mission:", mission);
+    if (!user || (user.role !== "ADMIN" && (!user.client || user.client.id !== mission.clientId))) {
+      return new NextResponse(
+        JSON.stringify({ error: "Forbidden: Only the owning client or admin can delete this mission" }),
+        {
+          status: 403,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+    }
 
     // Delete related records one by one with error handling
     try {
       // Delete payments
       if (mission.payments.length > 0) {
-        console.log("Deleting payments...");
-        await prisma.payment.deleteMany({
-          where: { missionId: params.id },
-        });
+        await prisma.payment.deleteMany({ where: { missionId: params.id } });
       }
-
       // Delete contract
       if (mission.contract) {
-        console.log("Deleting contract...");
-        await prisma.contract.delete({
-          where: { missionId: params.id },
-        });
+        await prisma.contract.delete({ where: { missionId: params.id } });
       }
-
       // Delete mission
-      console.log("Deleting mission...");
-      await prisma.mission.delete({
-        where: { id: params.id },
-      });
-
+      await prisma.mission.delete({ where: { id: params.id } });
       return new NextResponse(
         JSON.stringify({ message: "Mission deleted successfully" }),
         { 
@@ -215,7 +213,6 @@ export async function DELETE(
         }
       );
     } catch (deleteError: any) {
-      console.error("Error during deletion:", deleteError);
       return new NextResponse(
         JSON.stringify({ error: `Error during deletion: ${deleteError.message}` }),
         { 
@@ -227,7 +224,6 @@ export async function DELETE(
       );
     }
   } catch (error: any) {
-    console.error("Error in DELETE operation:", error);
     return new NextResponse(
       JSON.stringify({ error: `Internal Server Error: ${error.message}` }),
       { 
