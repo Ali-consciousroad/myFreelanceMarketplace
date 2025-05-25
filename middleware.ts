@@ -6,42 +6,72 @@ import { UserRole } from "@prisma/client";
 // Define role-based route permissions
 const rolePermissions = {
   [UserRole.ADMIN]: [
+    "/api/admin",
     "/api/admin/**",
+    "/api/users",
     "/api/users/**",
+    "/api/missions",
     "/api/missions/**",
+    "/api/contracts",
     "/api/contracts/**",
+    "/api/payments",
     "/api/payments/**",
     "/admin/**",
+    "/missions",
+    "/missions/**",
   ],
   [UserRole.SUPPORT]: [
+    "/api/support",
     "/api/support/**",
+    "/api/missions",
     "/api/missions/**",
+    "/api/contracts",
     "/api/contracts/**",
+    "/api/payments",
     "/api/payments/**",
     "/support/**",
+    "/missions",
+    "/missions/**",
   ],
   [UserRole.CLIENT]: [
+    "/api/missions",
     "/api/missions/**",
+    "/api/contracts",
     "/api/contracts/**",
+    "/api/payments",
     "/api/payments/**",
     "/client/**",
+    "/missions",
+    "/missions/**",
   ],
   [UserRole.FREELANCER]: [
+    "/api/missions",
     "/api/missions/**",
+    "/api/contracts",
     "/api/contracts/**",
+    "/api/portfolio",
     "/api/portfolio/**",
+    "/api/services",
     "/api/services/**",
     "/freelancer/**",
+    "/missions",
+    "/missions/**",
   ],
 };
 
 // Helper function to check if a path matches any of the allowed patterns
 function isPathAllowed(path: string, allowedPatterns: string[]): boolean {
+  console.log(`Checking if path ${path} matches any of:`, allowedPatterns);
   return allowedPatterns.some(pattern => {
+    // Convert pattern to regex, handling both exact matches and wildcards
     const regexPattern = pattern
       .replace(/\*/g, ".*") // Convert * to .* for regex
-      .replace(/\//g, "\\/"); // Escape forward slashes
-    return new RegExp(`^${regexPattern}$`).test(path);
+      .replace(/\//g, "\\/") // Escape forward slashes
+      .replace(/\*\*/g, ".*"); // Handle double asterisks
+    const regex = new RegExp(`^${regexPattern}$`);
+    const matches = regex.test(path);
+    console.log(`Pattern ${pattern} (regex: ${regex}) matches: ${matches}`);
+    return matches;
   });
 }
 
@@ -83,6 +113,7 @@ const publicRoutes = createRouteMatcher([
 export default clerkMiddleware(async (auth, req) => {
   // Allow public routes
   if (publicRoutes(req)) {
+    console.log(`Path ${req.nextUrl.pathname} is public, allowing access`);
     return NextResponse.next();
   }
 
@@ -108,7 +139,10 @@ export default clerkMiddleware(async (auth, req) => {
   const allowedPatterns = rolePermissions[userRole] || [];
   console.log(`Allowed patterns for role ${userRole}:`, allowedPatterns);
   
-  if (!isPathAllowed(path, allowedPatterns)) {
+  const isAllowed = isPathAllowed(path, allowedPatterns);
+  console.log(`Path ${path} is ${isAllowed ? 'allowed' : 'forbidden'} for role ${userRole}`);
+  
+  if (!isAllowed) {
     console.error(`User ${userId} with role ${userRole} tried to access unauthorized path: ${path}`);
     return new NextResponse("Forbidden - Insufficient permissions", { status: 403 });
   }
