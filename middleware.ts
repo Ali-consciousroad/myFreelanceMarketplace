@@ -6,6 +6,10 @@ import { UserRole } from "@prisma/client";
 // Define role-based route permissions
 const rolePermissions = {
   [UserRole.ADMIN]: [
+    // Admin pages
+    "/admin",
+    "/admin/**",
+    // Admin API routes
     "/api/admin",
     "/api/admin/**",
     "/api/users",
@@ -16,11 +20,15 @@ const rolePermissions = {
     "/api/contracts/**",
     "/api/payments",
     "/api/payments/**",
-    "/admin/**",
+    // Common routes
     "/missions",
     "/missions/**",
   ],
   [UserRole.SUPPORT]: [
+    // Support pages
+    "/support",
+    "/support/**",
+    // Support API routes
     "/api/support",
     "/api/support/**",
     "/api/missions",
@@ -29,22 +37,30 @@ const rolePermissions = {
     "/api/contracts/**",
     "/api/payments",
     "/api/payments/**",
-    "/support/**",
+    // Common routes
     "/missions",
     "/missions/**",
   ],
   [UserRole.CLIENT]: [
+    // Client pages
+    "/client",
+    "/client/**",
+    // Client API routes
     "/api/missions",
     "/api/missions/**",
     "/api/contracts",
     "/api/contracts/**",
     "/api/payments",
     "/api/payments/**",
-    "/client/**",
+    // Common routes
     "/missions",
     "/missions/**",
   ],
   [UserRole.FREELANCER]: [
+    // Freelancer pages
+    "/freelancer",
+    "/freelancer/**",
+    // Freelancer API routes
     "/api/missions",
     "/api/missions/**",
     "/api/contracts",
@@ -53,7 +69,7 @@ const rolePermissions = {
     "/api/portfolio/**",
     "/api/services",
     "/api/services/**",
-    "/freelancer/**",
+    // Common routes
     "/missions",
     "/missions/**",
   ],
