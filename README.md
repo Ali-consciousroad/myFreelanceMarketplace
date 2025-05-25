@@ -90,13 +90,50 @@ https://github.com/user-attachments/assets/aef3c099-e371-43bf-b426-f5ba73185a7c
 
 - [Vercel Analytics](https://vercel.com/analytics) – Track unique visitors, pageviews, and more in a privacy-friendly way
 
-###
+### Role-Based Authentication
 
-Visual Database UI to interact with PostgreSQL through a clean interface
-Start prisma studio:
+The application implements a comprehensive role-based authentication system using Clerk for authentication and custom middleware for route protection. Each user role has specific permissions and access rights.
 
+#### User Roles and Permissions
+
+##### Admin User (Tested)
+- `/admin/**` - Admin dashboard and pages
+- `/api/admin/**` - Admin API endpoints
+- `/api/users/**` - User management
+- `/api/missions/**` - Mission management
+- `/api/contracts/**` - Contract management
+- `/api/payments/**` - Payment management
+
+##### Support User
+- `/support/**` - Support dashboard and pages
+- `/api/support/**` - Support API endpoints
+- `/api/missions/**` - Mission management
+- `/api/contracts/**` - Contract management
+- `/api/payments/**` - Payment management
+
+##### Client User
+- `/client/**` - Client dashboard and pages
+- `/api/missions/**` - Mission management
+- `/api/contracts/**` - Contract management
+- `/api/payments/**` - Payment management
+
+##### Freelancer User (Tested)
+- `/freelancer/**` - Freelancer dashboard and pages
+- `/api/missions/**` - Mission management
+- `/api/contracts/**` - Contract management
+- `/api/portfolio/**` - Portfolio management
+- `/api/services/**` - Services management
+
+#### Common Routes
+All user roles have access to:
+- `/missions/**` - Public mission listings
+- `/api/missions/**` - Public mission API endpoints
+
+### Database Management
+To interact with the PostgreSQL database through a clean interface, use Prisma Studio:
+```bash
 npx prisma studio
+```
+```
 
-## Author
-
-- Ali Dindar
+This will provide a well-formatted documentation of the role-based authentication system in your README.md file. Would you like me to help you with anything else?
