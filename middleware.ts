@@ -40,7 +40,7 @@ const getUserRole = (auth: { userId?: string; publicMetadata?: { role?: string }
 // Export the middleware
 export default authMiddleware({
   publicRoutes: ["/", "/sign-in", "/sign-up"],
-  afterAuth(auth, req: NextRequest) {
+  afterAuth(auth: { userId?: string; publicMetadata?: { role?: string } }, req: NextRequest) {
     // Allow public routes
     if (!auth.userId) {
       return NextResponse.next();
