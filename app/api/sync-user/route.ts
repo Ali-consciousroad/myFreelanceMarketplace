@@ -1,4 +1,4 @@
-import { auth } from '@clerk/nextjs/server';
+import { auth, clerkClient } from '@clerk/nextjs/server';
 import prisma from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 
@@ -9,9 +9,11 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    console.log('Syncing user:', userId);
+
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({ 
-      where: { id: userId }, // Using id instead of clerkId for now
+      where: { id: userId },
       include: {
         client: true,
         freelance: true
@@ -22,10 +24,10 @@ export async function GET() {
       // Create new user with default role
       const newUser = await prisma.user.create({
         data: {
-          id: userId, // Using userId as the id
+          id: userId,
           login: `user-${userId}`,
-          password: 'placeholder', // We'll handle this differently in production
-          role: 'CLIENT', // Default role
+          password: 'placeholder',
+          role: 'ADMIN', // Set as ADMIN for testing
         },
         include: {
           client: true,
@@ -33,11 +35,35 @@ export async function GET() {
         }
       });
 
+      console.log('Created new user:', newUser);
+
+      // Update Clerk metadata
+      try {
+        await clerkClient.users.updateUser(userId, {
+          publicMetadata: { role: newUser.role }
+        });
+        console.log('Updated Clerk metadata for new user');
+      } catch (error) {
+        console.error('Error updating Clerk metadata:', error);
+      }
+
       return NextResponse.json({ 
         success: true, 
         user: newUser,
         isNewUser: true 
       });
+    }
+
+    console.log('Found existing user:', existingUser);
+
+    // Update Clerk metadata
+    try {
+      await clerkClient.users.updateUser(userId, {
+        publicMetadata: { role: existingUser.role }
+      });
+      console.log('Updated Clerk metadata for existing user');
+    } catch (error) {
+      console.error('Error updating Clerk metadata:', error);
     }
 
     return NextResponse.json({ 

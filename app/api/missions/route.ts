@@ -43,14 +43,9 @@ export async function POST(request: Request) {
     // Fetch user and check role
     const user = await getUserWithRoleByClerkId(userId);
     if (!user || (user.role !== "CLIENT" && user.role !== "ADMIN")) {
-      return new NextResponse(
-        JSON.stringify({ error: "Forbidden: Only clients or admins can create missions" }),
-        {
-          status: 403,
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
+      return NextResponse.json(
+        { error: "Forbidden: Only clients or admins can create missions" },
+        { status: 403 }
       );
     }
 
@@ -59,14 +54,9 @@ export async function POST(request: Request) {
 
     // Validate required fields
     if (!description || !dailyRate || !timeframe || !clientId) {
-      return new NextResponse(
-        JSON.stringify({ error: "Missing required fields" }),
-        { 
-          status: 400,
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
+      return NextResponse.json(
+        { error: "Missing required fields" },
+        { status: 400 }
       );
     }
 
@@ -94,25 +84,12 @@ export async function POST(request: Request) {
       },
     });
 
-    return new NextResponse(
-      JSON.stringify(mission),
-      { 
-        status: 201,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    return NextResponse.json(mission, { status: 201 });
   } catch (error) {
     console.error("Error creating mission:", error);
-    return new NextResponse(
-      JSON.stringify({ error: "Internal Server Error" }),
-      { 
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
     );
   }
 }

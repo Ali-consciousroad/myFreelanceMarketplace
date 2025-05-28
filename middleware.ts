@@ -5,19 +5,19 @@ import type { NextRequest } from "next/server";
 // Define role-based route permissions
 const rolePermissions = {
   ADMIN: {
-    pages: ["/admin", "/admin/**", "/test/missions"],
+    pages: ["/admin", "/admin/**", "/test/missions", "/sync"],
     api: ["/api/admin/**", "/api/users/**", "/api/missions/**"],
   },
   SUPPORT: {
-    pages: ["/support", "/support/**", "/test/missions"],
+    pages: ["/support", "/support/**", "/test/missions", "/sync"],
     api: ["/api/support/**", "/api/missions/**"],
   },
   CLIENT: {
-    pages: ["/client", "/client/**"],
+    pages: ["/client", "/client/**", "/sync"],
     api: ["/api/client/**", "/api/missions/**"],
   },
   FREELANCER: {
-    pages: ["/freelancer", "/freelancer/**"],
+    pages: ["/freelancer", "/freelancer/**", "/sync"],
     api: ["/api/freelancer/**", "/api/missions/**"],
   },
 };
@@ -40,55 +40,22 @@ const getUserRole = (auth: { userId?: string; publicMetadata?: { role?: string }
 
 // Export the middleware
 export default authMiddleware({
-  publicRoutes: ["/", "/sign-in", "/sign-up"],
+  publicRoutes: ["/", "/sign-in", "/sign-up", "/test/missions", "/sync"],
   afterAuth(auth, req) {
     const { pathname } = req.nextUrl;
 
     // Allow public routes
-    if (["/", "/sign-in", "/sign-up"].includes(pathname)) {
+    if (["/", "/sign-in", "/sign-up", "/test/missions", "/sync"].includes(pathname)) {
       return NextResponse.next();
     }
 
-    if (!auth.userId) {
-      return NextResponse.redirect(new URL("/sign-in", req.url));
+    // For now, allow all authenticated users to access everything
+    if (auth.userId) {
+      return NextResponse.next();
     }
 
-    const userRole = getUserRole({ 
-      userId: auth.userId, 
-      publicMetadata: auth.sessionClaims?.publicMetadata as { role?: string } 
-    });
-
-    // If no role is found, deny access
-    if (!userRole) {
-      console.log("No role found for user:", auth.userId);
-      return NextResponse.redirect(new URL("/sign-in", req.url));
-    }
-
-    // Get allowed patterns for the user's role
-    const roleConfig = rolePermissions[userRole as keyof typeof rolePermissions];
-    if (!roleConfig) {
-      console.log("No permissions found for role:", userRole);
-      return NextResponse.redirect(new URL("/sign-in", req.url));
-    }
-
-    // Check if the path is allowed
-    const isApiRoute = pathname.startsWith("/api");
-    const allowedPatterns = isApiRoute ? roleConfig.api : roleConfig.pages;
-    const isAllowed = isPathAllowed(pathname, allowedPatterns);
-
-    console.log("Auth check:", {
-      path: pathname,
-      role: userRole,
-      allowedPatterns,
-      isAllowed,
-    });
-
-    if (!isAllowed) {
-      console.log("Access denied for path:", pathname);
-      return NextResponse.redirect(new URL("/sign-in", req.url));
-    }
-
-    return NextResponse.next();
+    // Redirect to sign-in if not authenticated
+    return NextResponse.redirect(new URL("/sign-in", req.url));
   }
 });
 
