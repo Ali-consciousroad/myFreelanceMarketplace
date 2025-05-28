@@ -1,14 +1,15 @@
 import { authMiddleware } from "@clerk/nextjs";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+
 // Define role-based route permissions
 const rolePermissions = {
   ADMIN: {
-    pages: ["/admin", "/admin/**"],
+    pages: ["/admin", "/admin/**", "/test/missions"],
     api: ["/api/admin/**", "/api/users/**", "/api/missions/**"],
   },
   SUPPORT: {
-    pages: ["/support", "/support/**"],
+    pages: ["/support", "/support/**", "/test/missions"],
     api: ["/api/support/**", "/api/missions/**"],
   },
   CLIENT: {
@@ -40,14 +41,22 @@ const getUserRole = (auth: { userId?: string; publicMetadata?: { role?: string }
 // Export the middleware
 export default authMiddleware({
   publicRoutes: ["/", "/sign-in", "/sign-up"],
-  afterAuth(auth: { userId?: string; publicMetadata?: { role?: string } }, req: NextRequest) {
+  afterAuth(auth, req) {
+    const { pathname } = req.nextUrl;
+
     // Allow public routes
-    if (!auth.userId) {
+    if (["/", "/sign-in", "/sign-up"].includes(pathname)) {
       return NextResponse.next();
     }
 
-    const { pathname } = req.nextUrl;
-    const userRole = getUserRole(auth);
+    if (!auth.userId) {
+      return NextResponse.redirect(new URL("/sign-in", req.url));
+    }
+
+    const userRole = getUserRole({ 
+      userId: auth.userId, 
+      publicMetadata: auth.sessionClaims?.publicMetadata as { role?: string } 
+    });
 
     // If no role is found, deny access
     if (!userRole) {
@@ -80,7 +89,7 @@ export default authMiddleware({
     }
 
     return NextResponse.next();
-  },
+  }
 });
 
 export const config = {
