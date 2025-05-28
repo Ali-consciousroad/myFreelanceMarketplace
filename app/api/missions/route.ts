@@ -2,31 +2,21 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import prisma, { getUserWithRoleByClerkId } from "@/lib/prisma";
-import { getAuth } from '@clerk/nextjs/server';
-import { NextRequest } from 'next/server';
+import { db } from "@/lib/db";
 
 // GET /api/missions - List all missions
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    const { userId } = await getAuth(request);
-
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const missions = await prisma.mission.findMany({
-      include: {
-        client: true,
-        categories: true,
-      },
+    const missions = await db.mission.findMany({
+      orderBy: {
+        createdAt: 'desc'
+      }
     });
-
     return NextResponse.json(missions);
   } catch (error) {
-    console.error('Error fetching missions:', error);
+    console.error("Error fetching missions:", error);
     return NextResponse.json(
-      { error: 'Failed to fetch missions' },
+      { error: "Failed to fetch missions" },
       { status: 500 }
     );
   }
@@ -40,17 +30,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Fetch user and check role
-    const user = await getUserWithRoleByClerkId(userId);
-    if (!user || (user.role !== "CLIENT" && user.role !== "ADMIN")) {
-      return NextResponse.json(
-        { error: "Forbidden: Only clients or admins can create missions" },
-        { status: 403 }
-      );
-    }
-
     const body = await request.json();
-    const { status, dailyRate, timeframe, description, clientId, categoryIds } = body;
+    const { status, dailyRate, timeframe, description, clientId } = body;
 
     // Validate required fields
     if (!description || !dailyRate || !timeframe || !clientId) {
@@ -61,26 +42,13 @@ export async function POST(request: Request) {
     }
 
     // Create the mission
-    const mission = await prisma.mission.create({
+    const mission = await db.mission.create({
       data: {
         status,
         dailyRate,
         timeframe,
         description,
-        client: {
-          connect: { id: clientId },
-        },
-        categories: {
-          connect: categoryIds?.map((id: string) => ({ id })) || [],
-        },
-      },
-      include: {
-        client: {
-          include: {
-            user: true,
-          },
-        },
-        categories: true,
+        clientId,
       },
     });
 
