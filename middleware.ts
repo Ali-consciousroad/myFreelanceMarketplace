@@ -43,6 +43,9 @@ export default authMiddleware({
   publicRoutes: ["/", "/sign-in", "/sign-up", "/test/missions", "/sync"],
   afterAuth(auth, req) {
     const { pathname } = req.nextUrl;
+    if (pathname === "/") {
+      return;
+    }
 
     // Allow public routes
     if (["/", "/sign-in", "/sign-up", "/test/missions", "/sync"].includes(pathname)) {
