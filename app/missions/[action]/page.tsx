@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 
@@ -26,18 +26,7 @@ export default function MissionForm({ params }: { params: { action: string } }) 
     status: "DRAFT",
   });
 
-  useEffect(() => {
-    if (isLoaded && !isSignedIn) {
-      router.push("/sign-in");
-      return;
-    }
-    
-    if (isSignedIn && isEdit) {
-      fetchMission();
-    }
-  }, [isLoaded, isSignedIn, isEdit, router]);
-
-  const fetchMission = async () => {
+  const fetchMission = useCallback(async () => {
     try {
       const response = await fetch(`/api/missions/${params.action}`, {
         headers: {
@@ -50,7 +39,17 @@ export default function MissionForm({ params }: { params: { action: string } }) 
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch mission");
     }
-  };
+  }, [params.action]);
+
+  useEffect(() => {
+    if (isLoaded && !isSignedIn) {
+      router.push("/sign-in");
+      return;
+    }
+    if (isSignedIn && isEdit) {
+      fetchMission();
+    }
+  }, [isLoaded, isSignedIn, isEdit, router, fetchMission]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

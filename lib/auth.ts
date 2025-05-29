@@ -37,7 +37,7 @@ export const rolePermissions = {
 };
 
 // Type for the permissions
-export type Permission = keyof typeof rolePermissions[UserRole.ADMIN];
+export type Permission = keyof typeof rolePermissions["ADMIN"];
 
 // Function to check if a user has a specific permission
 export function hasPermission(role: UserRole, permission: Permission): boolean {

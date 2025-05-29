@@ -30,23 +30,23 @@ export default function NavBar() {
             <p>Precedent</p>
           </Link>
           <div className="flex items-center gap-4">
-            <SignedOut>
-              <SignInButton mode="modal">
-                <button className="rounded-full border border-black bg-black px-4 py-1.5 text-sm text-white transition-colors hover:bg-white hover:text-black">
-                  Sign In
-                </button>
-              </SignInButton>
-            </SignedOut>
-            <SignedIn>
+          <SignedOut>
+            <SignInButton mode="modal">
+              <button className="rounded-full border border-black bg-black px-4 py-1.5 text-sm text-white transition-colors hover:bg-white hover:text-black">
+                Sign In
+              </button>
+            </SignInButton>
+          </SignedOut>
+          <SignedIn>
               <Link
-                href="/"
+                  href="/"
                 className="flex items-center gap-2 rounded-full border border-black bg-black px-4 py-1.5 text-sm text-white transition-colors hover:bg-white hover:text-black"
               >
                 <LayoutDashboard className="h-4 w-4" />
                 Dashboard
               </Link>
               <UserButton />
-            </SignedIn>
+          </SignedIn>
           </div>
         </div>
       </div>
