@@ -30,6 +30,11 @@ export default function RootLayout({
     <ClerkProvider
       appearance={{
         baseTheme: dark,
+        elements: {
+          formFieldInput: "bg-gray-800 text-white border-gray-600",
+          formFieldLabel: "text-gray-300",
+          formFieldInputShowPasswordButton: "text-gray-400 hover:text-gray-200",
+        },
       }}
     >
       <html lang="en" suppressHydrationWarning>
