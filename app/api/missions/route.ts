@@ -30,11 +30,35 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Find or create the client record for this user
+    let client = await db.client.findUnique({ where: { userId } });
+    if (!client) {
+      // Ensure a User record exists for this Clerk user
+      let user = await db.user.findUnique({ where: { id: userId } });
+      if (!user) {
+        user = await db.user.create({
+          data: {
+            id: userId,
+            login: userId, // Use Clerk userId as login for now
+            password: "placeholder", // Placeholder, not used with Clerk
+            role: "CLIENT",
+          },
+        });
+      }
+      client = await db.client.create({
+        data: {
+          userId,
+          company: "My Company", // Placeholder, user can edit later
+          vat: "N/A", // Placeholder
+        },
+      });
+    }
+
     const body = await request.json();
-    const { status, dailyRate, timeframe, description, clientId } = body;
+    const { title, status, dailyRate, timeframe, description } = body;
 
     // Validate required fields
-    if (!description || !dailyRate || !timeframe || !clientId) {
+    if (!title || !description || !dailyRate || !timeframe) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
@@ -44,11 +68,12 @@ export async function POST(request: Request) {
     // Create the mission
     const mission = await db.mission.create({
       data: {
+        title,
         status,
         dailyRate,
         timeframe,
         description,
-        clientId,
+        clientId: client.id, // Use the Client.id, not Clerk userId
       },
     });
 

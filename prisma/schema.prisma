@@ -55,6 +55,7 @@ model Client {
 
 model Mission {
   id          String        @id @default(uuid())
+  title       String        @db.VarChar(255)
   status      MissionStatus @default(OPEN)
   dailyRate   Decimal       @db.Decimal(10, 2)
   timeframe   Int

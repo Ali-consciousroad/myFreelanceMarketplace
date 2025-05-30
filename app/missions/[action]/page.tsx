@@ -131,8 +131,11 @@ export default function MissionForm({ params }: { params: { action: string } }) 
               <input
                 type="number"
                 id="dailyRate"
-                value={formData.dailyRate}
-                onChange={(e) => setFormData({ ...formData, dailyRate: Number(e.target.value) })}
+                value={formData.dailyRate === 0 ? '' : String(formData.dailyRate)}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/^0+/, '') || '0';
+                  setFormData({ ...formData, dailyRate: Number(value) });
+                }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
                 min="0"
                 required
@@ -146,8 +149,11 @@ export default function MissionForm({ params }: { params: { action: string } }) 
               <input
                 type="number"
                 id="timeframe"
-                value={formData.timeframe}
-                onChange={(e) => setFormData({ ...formData, timeframe: Number(e.target.value) })}
+                value={formData.timeframe === 0 ? '' : String(formData.timeframe)}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/^0+/, '') || '0';
+                  setFormData({ ...formData, timeframe: Number(value) });
+                }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
                 min="1"
                 required

@@ -160,6 +160,7 @@ async function main() {
   const missions = await Promise.all([
     prisma.mission.create({
       data: {
+        title: "E-commerce Platform Development",
         status: 'OPEN',
         dailyRate: 500,
         timeframe: 30,
@@ -174,6 +175,7 @@ async function main() {
     }),
     prisma.mission.create({
       data: {
+        title: "Food Delivery App Development",
         status: 'IN_PROGRESS',
         dailyRate: 450,
         timeframe: 45,
@@ -188,6 +190,7 @@ async function main() {
     }),
     prisma.mission.create({
       data: {
+        title: "SaaS Platform UI Redesign",
         status: 'OPEN',
         dailyRate: 400,
         timeframe: 20,

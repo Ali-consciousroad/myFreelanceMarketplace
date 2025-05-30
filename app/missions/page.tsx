@@ -1,167 +1,92 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import { useAuth } from "@clerk/nextjs";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
+import { Plus } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface Mission {
   id: string;
+  title: string;
   description: string;
   dailyRate: number;
   timeframe: number;
-  status: "OPEN" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
-  createdAt: string;
-  client: {
-    id: string;
-    company: string;
-    user: {
-      id: string;
-      login: string;
-    };
-  };
-  categories: Array<{
-    id: string;
-    name: string;
-  }>;
+  status: string;
 }
 
 export default function MissionsPage() {
-  const { isLoaded, userId, isSignedIn } = useAuth();
   const router = useRouter();
   const [missions, setMissions] = useState<Mission[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (isLoaded && !isSignedIn) {
-      router.push("/sign-in");
-      return;
-    }
-    
-    if (isSignedIn) {
-      fetchMissions();
-    }
-  }, [isLoaded, isSignedIn, router]);
+    fetchMissions();
+  }, []);
 
   const fetchMissions = async () => {
     try {
-      const response = await fetch("/api/missions");
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch missions: ${response.statusText}`);
-      }
-      
+      const response = await fetch('/api/missions');
+      if (!response.ok) throw new Error('Failed to fetch missions');
       const data = await response.json();
       setMissions(data);
-    } catch (err) {
-      console.error("Error in fetchMissions:", err);
-      setError(err instanceof Error ? err.message : "An error occurred");
+    } catch (error) {
+      console.error('Error fetching missions:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this mission?")) return;
-    
-    try {
-      const response = await fetch(`/api/missions/${id}`, {
-        method: "DELETE",
-      });
-      if (!response.ok) throw new Error("Failed to delete mission");
-      await fetchMissions(); // Refresh the list
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete mission");
-    }
-  };
-
-  if (!isLoaded) {
-    return <div className="p-8">Loading authentication...</div>;
-  }
-
-  if (!isSignedIn) {
-    return <div className="p-8">Please sign in to view missions.</div>;
-  }
-
-  if (loading) {
-    return <div className="p-8">Loading missions...</div>;
-  }
-
-  if (error) {
-    return <div className="p-8 text-red-500">Error: {error}</div>;
-  }
-
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 pt-20 pb-8">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Missions</h1>
-        <Link 
-          href="/missions/new" 
-          className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+        <h1 className="text-3xl font-bold">Available Missions</h1>
+        <Button 
+          onClick={() => router.push('/missions/new')}
+          className="flex items-center gap-2"
         >
-          Create New Mission
-        </Link>
+          <Plus className="h-4 w-4" />
+          New Mission
+        </Button>
       </div>
 
-      {missions.length === 0 ? (
+      {loading ? (
+        <div className="text-center py-8">Loading missions...</div>
+      ) : missions.length === 0 ? (
         <div className="text-center py-8 text-gray-500">
-          No missions found. Create your first mission!
+          No missions available. Be the first to post one!
         </div>
       ) : (
-        <div className="grid gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {missions.map((mission) => (
-            <div 
-              key={mission.id} 
-              className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow"
-            >
-              <div className="flex justify-between items-start">
-                <div>
-                  <h2 className="text-xl font-semibold mb-2">
-                    {mission.client.company}
-                  </h2>
-                  <p className="text-gray-600 mb-4">{mission.description}</p>
-                  <div className="flex gap-4 text-sm text-gray-500">
-                    <span>${mission.dailyRate}/day</span>
-                    <span>{mission.timeframe} days</span>
-                    <span className={`px-2 py-1 rounded ${
-                      mission.status === "IN_PROGRESS" ? "bg-blue-100 text-blue-800" :
-                      mission.status === "COMPLETED" ? "bg-green-100 text-green-800" :
-                      mission.status === "CANCELLED" ? "bg-red-100 text-red-800" :
-                      "bg-gray-100 text-gray-800"
-                    }`}>
-                      {mission.status}
-                    </span>
-                  </div>
-                  {mission.categories.length > 0 && (
-                    <div className="mt-2 flex gap-2">
-                      {mission.categories.map(category => (
-                        <span 
-                          key={category.id}
-                          className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-sm"
-                        >
-                          {category.name}
-                        </span>
-                      ))}
-                    </div>
-                  )}
+            <Card key={mission.id} className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <CardTitle>{mission.title}</CardTitle>
+                <CardDescription>
+                  ${mission.dailyRate}/day • {mission.timeframe} days
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600 line-clamp-3">{mission.description}</p>
+                <div className="mt-4 flex justify-end">
+                  <span className={`px-2 py-1 rounded-full ${
+                    mission.status === 'OPEN' ? 'bg-green-100 text-green-800' :
+                    mission.status === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-800' :
+                    'bg-gray-100 text-gray-800'
+                  }`}>
+                    {mission.status}
+                  </span>
                 </div>
-                <div className="flex gap-2">
-                  <Link
-                    href={`/missions/${mission.id}/edit`}
-                    className="text-blue-500 hover:text-blue-700"
-                  >
-                    Edit
-                  </Link>
-                  <button
-                    onClick={() => handleDelete(mission.id)}
-                    className="text-red-500 hover:text-red-700"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            </div>
+              </CardContent>
+              <CardFooter>
+                <Button 
+                  className="w-full"
+                  onClick={() => router.push(`/missions/${mission.id}`)}
+                >
+                  View Details
+                </Button>
+              </CardFooter>
+            </Card>
           ))}
         </div>
       )}
