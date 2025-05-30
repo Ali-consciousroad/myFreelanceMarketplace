@@ -25,7 +25,8 @@ export async function GET() {
       id: user.id,
       role: user.role,
       isClient: !!user.client,
-      isFreelancer: !!user.freelance
+      isFreelancer: !!user.freelance,
+      clientId: user.client ? user.client.id : null
     });
   } catch (error) {
     console.error('Error fetching user:', error);

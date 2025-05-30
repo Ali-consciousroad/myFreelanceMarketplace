@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useAuth } from "@clerk/nextjs";
 
 interface Mission {
   id: string;
@@ -13,15 +14,19 @@ interface Mission {
   dailyRate: number;
   timeframe: number;
   status: string;
+  clientId: string;
 }
 
 export default function MissionsPage() {
   const router = useRouter();
+  const { userId } = useAuth();
   const [missions, setMissions] = useState<Mission[]>([]);
   const [loading, setLoading] = useState(true);
+  const [myClientId, setMyClientId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchMissions();
+    fetchMyClientId();
   }, []);
 
   const fetchMissions = async () => {
@@ -34,6 +39,26 @@ export default function MissionsPage() {
       console.error('Error fetching missions:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchMyClientId = async () => {
+    if (!userId) return;
+    const res = await fetch('/api/me');
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.isClient && data.clientId) setMyClientId(data.clientId);
+    else if (data.isClient && data.client && data.client.id) setMyClientId(data.client.id);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this mission?')) return;
+    try {
+      const response = await fetch(`/api/missions/${id}`, { method: 'DELETE' });
+      if (!response.ok) throw new Error('Failed to delete mission');
+      setMissions(missions.filter(m => m.id !== id));
+    } catch (error) {
+      alert('Failed to delete mission.');
     }
   };
 
@@ -70,7 +95,7 @@ export default function MissionsPage() {
                 <p className="text-gray-600 mb-6" style={{ minHeight: '60px', maxHeight: '60px', overflow: 'hidden' }}>
                   {mission.description.length > 200 ? mission.description.slice(0, 200) + '…' : mission.description}
                 </p>
-                <div className="flex items-end justify-between mt-auto">
+                <div className="flex items-end justify-between mt-auto gap-2">
                   <span className={`px-2 py-1 rounded-full ${
                     mission.status === 'OPEN' ? 'bg-green-100 text-green-800' :
                     mission.status === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-800' :
@@ -84,6 +109,15 @@ export default function MissionsPage() {
                   >
                     View Details
                   </Button>
+                  {myClientId && mission.clientId === myClientId && (
+                    <Button 
+                      variant="destructive"
+                      className="ml-2"
+                      onClick={() => handleDelete(mission.id)}
+                    >
+                      Delete
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
