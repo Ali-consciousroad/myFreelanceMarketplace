@@ -59,16 +59,18 @@ export default function MissionsPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {missions.map((mission) => (
-            <Card key={mission.id} className="hover:shadow-lg transition-shadow">
+            <Card key={mission.id} className="flex flex-col h-full hover:shadow-lg transition-shadow">
               <CardHeader>
                 <CardTitle>{mission.title}</CardTitle>
                 <CardDescription>
                   ${mission.dailyRate}/day • {mission.timeframe} days
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <p className="text-gray-600 line-clamp-3">{mission.description}</p>
-                <div className="mt-4 flex justify-end">
+              <CardContent className="flex-1 flex flex-col">
+                <p className="text-gray-600 mb-6" style={{ minHeight: '60px', maxHeight: '60px', overflow: 'hidden' }}>
+                  {mission.description.length > 200 ? mission.description.slice(0, 200) + '…' : mission.description}
+                </p>
+                <div className="flex items-end justify-between mt-auto">
                   <span className={`px-2 py-1 rounded-full ${
                     mission.status === 'OPEN' ? 'bg-green-100 text-green-800' :
                     mission.status === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-800' :
@@ -76,16 +78,14 @@ export default function MissionsPage() {
                   }`}>
                     {mission.status}
                   </span>
+                  <Button 
+                    className="ml-2"
+                    onClick={() => router.push(`/missions/${mission.id}`)}
+                  >
+                    View Details
+                  </Button>
                 </div>
               </CardContent>
-              <CardFooter>
-                <Button 
-                  className="w-full"
-                  onClick={() => router.push(`/missions/${mission.id}`)}
-                >
-                  View Details
-                </Button>
-              </CardFooter>
             </Card>
           ))}
         </div>
