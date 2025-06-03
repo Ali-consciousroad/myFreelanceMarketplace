@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -46,7 +46,6 @@ export default function NewMissionPage() {
           dailyRate,
           timeframe,
           status: "OPEN",
-          clientId: userId,
         }),
       });
 
@@ -67,7 +66,6 @@ export default function NewMissionPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    
     // For number inputs, remove leading zeros
     if (name === 'dailyRate' || name === 'timeframe') {
       const numValue = value.replace(/^0+/, '') || '0';
@@ -83,17 +81,17 @@ export default function NewMissionPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <Card className="max-w-2xl mx-auto">
+      <div className="glass-card max-w-2xl mx-auto p-8 shadow-lg border border-gray-200 dark:border-gray-700">
         <CardHeader>
-          <CardTitle>Create New Mission</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white">Create New Mission</CardTitle>
+          <CardDescription className="text-gray-500 dark:text-gray-300">
             Fill in the details below to post your mission
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="title">Title</Label>
+              <Label htmlFor="title" className="text-gray-800 dark:text-gray-200">Title</Label>
               <Input
                 id="title"
                 name="title"
@@ -101,11 +99,12 @@ export default function NewMissionPage() {
                 onChange={handleChange}
                 placeholder="Enter mission title"
                 required
+                className="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 dark:focus-visible:ring-blue-600"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description" className="text-gray-800 dark:text-gray-200">Description</Label>
               <Textarea
                 id="description"
                 name="description"
@@ -114,12 +113,17 @@ export default function NewMissionPage() {
                 placeholder="Describe your mission in detail"
                 required
                 rows={5}
+                maxLength={200}
+                className="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 dark:focus-visible:ring-blue-600"
               />
+              <div className="text-xs text-gray-500 dark:text-gray-400 text-right">
+                {formData.description.length}/200 characters
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="dailyRate">Daily Rate ($)</Label>
+                <Label htmlFor="dailyRate" className="text-gray-800 dark:text-gray-200">Daily Rate ($)</Label>
                 <Input
                   id="dailyRate"
                   name="dailyRate"
@@ -131,11 +135,12 @@ export default function NewMissionPage() {
                   min="0"
                   inputMode="numeric"
                   pattern="[0-9]*"
+                  className="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 dark:focus-visible:ring-blue-600"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="timeframe">Timeframe (days)</Label>
+                <Label htmlFor="timeframe" className="text-gray-800 dark:text-gray-200">Timeframe (days)</Label>
                 <Input
                   id="timeframe"
                   name="timeframe"
@@ -147,25 +152,27 @@ export default function NewMissionPage() {
                   min="1"
                   inputMode="numeric"
                   pattern="[0-9]*"
+                  className="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 dark:focus-visible:ring-blue-600"
                 />
               </div>
             </div>
           </CardContent>
 
-          <CardFooter className="flex justify-between">
+          <CardFooter className="flex justify-between mt-6">
             <Button
               type="button"
               variant="outline"
+              className="border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 dark:focus-visible:ring-blue-600"
               onClick={() => router.back()}
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading} className="bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 dark:focus-visible:ring-blue-600 border border-blue-700 dark:border-blue-500">
               {loading ? "Creating..." : "Create Mission"}
             </Button>
           </CardFooter>
         </form>
-      </Card>
+      </div>
     </div>
   );
 } 
