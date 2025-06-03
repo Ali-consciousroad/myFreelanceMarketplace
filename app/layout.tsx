@@ -27,22 +27,22 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ClerkProvider
-      appearance={{
-        baseTheme: dark,
-        elements: {
-          formFieldInput: "bg-gray-800 text-white border-gray-600",
-          formFieldLabel: "text-gray-300",
-          formFieldInputShowPasswordButton: "text-gray-400 hover:text-gray-200",
-        },
-      }}
-    >
-      <html lang="en" suppressHydrationWarning>
-        <head>
-          <link rel="manifest" href="/manifest.json" />
-          <meta name="theme-color" content="#000000" />
-        </head>
-        <body className={cx(sfPro.variable)}>
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#000000" />
+      </head>
+      <body className={cx(sfPro.variable)} suppressHydrationWarning>
+        <ClerkProvider
+          appearance={{
+            baseTheme: dark,
+            elements: {
+              formFieldInput: "bg-gray-800 text-white border-gray-600",
+              formFieldLabel: "text-gray-300",
+              formFieldInputShowPasswordButton: "text-gray-400 hover:text-gray-200",
+            },
+          }}
+        >
           <Suspense fallback="...">
             <Navbar />
           </Suspense>
@@ -51,8 +51,8 @@ export default function RootLayout({
           </main>
           <Footer />
           <VercelAnalytics />
-        </body>
-      </html>
-    </ClerkProvider>
+        </ClerkProvider>
+      </body>
+    </html>
   );
 }
