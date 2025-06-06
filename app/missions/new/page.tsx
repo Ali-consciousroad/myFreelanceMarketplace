@@ -80,7 +80,7 @@ export default function NewMissionPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 mt-16">
       <div className="glass-card max-w-2xl mx-auto p-8 shadow-lg border border-gray-200 dark:border-gray-700">
         <CardHeader>
           <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white">Create New Mission</CardTitle>
