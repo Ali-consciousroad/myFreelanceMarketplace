@@ -32,25 +32,27 @@ export default function RootLayout({
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#000000" />
       </head>
-      <body className={cx(sfPro.variable)} suppressHydrationWarning>
+      <body className={`${sfPro.variable} min-h-screen`}>
         <ClerkProvider
           appearance={{
             baseTheme: dark,
-            elements: {
-              formFieldInput: "bg-gray-800 text-white border-gray-600",
-              formFieldLabel: "text-gray-300",
-              formFieldInputShowPasswordButton: "text-gray-400 hover:text-gray-200",
+            variables: {
+              colorPrimary: "#0ea5e9",
+              colorBackground: "#0f172a",
+              colorText: "#f8fafc",
+              colorInputBackground: "#1e293b",
+              colorInputText: "#f8fafc",
             },
           }}
         >
-          <Suspense fallback="...">
+          <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-blue-100 dark:from-gray-900 dark:to-gray-800">
             <Navbar />
-          </Suspense>
-          <main className="w-full">
-            {children}
-          </main>
-          <Footer />
-          <VercelAnalytics />
+            <main className="flex-1 flex flex-col">
+              {children}
+            </main>
+            <Footer />
+            <VercelAnalytics />
+          </div>
         </ClerkProvider>
       </body>
     </html>
