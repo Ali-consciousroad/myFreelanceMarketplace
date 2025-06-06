@@ -3,7 +3,12 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
-import { Mission } from '@prisma/client';
+import { Mission as PrismaMission, MissionStatus } from '@prisma/client';
+
+interface Mission extends Omit<PrismaMission, 'dailyRate'> {
+  dailyRate: number;
+  skills: string[];
+}
 
 export default function MissionPage({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -18,7 +23,7 @@ export default function MissionPage({ params }: { params: { id: string } }) {
     dailyRate: 0,
     timeframe: 0,
     skills: [] as string[],
-    status: 'OPEN' as const
+    status: 'OPEN' as MissionStatus
   });
 
   useEffect(() => {
@@ -273,7 +278,7 @@ export default function MissionPage({ params }: { params: { id: string } }) {
                 <dl className="space-y-4">
                   <div>
                     <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Daily Rate</dt>
-                    <dd className="mt-1 text-lg text-gray-900 dark:text-white">€{mission.dailyRate}</dd>
+                    <dd className="mt-1 text-lg text-gray-900 dark:text-white">€{Number(mission.dailyRate)}</dd>
                   </div>
                   <div>
                     <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Timeframe</dt>
@@ -281,7 +286,7 @@ export default function MissionPage({ params }: { params: { id: string } }) {
                   </div>
                   <div>
                     <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Budget</dt>
-                    <dd className="mt-1 text-lg text-gray-900 dark:text-white">€{mission.dailyRate * mission.timeframe}</dd>
+                    <dd className="mt-1 text-lg text-gray-900 dark:text-white">€{Number(mission.dailyRate) * mission.timeframe}</dd>
                   </div>
                   <div>
                     <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Status</dt>
@@ -301,14 +306,18 @@ export default function MissionPage({ params }: { params: { id: string } }) {
               <div className="glass-card p-6">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Required Skills</h3>
                 <div className="flex flex-wrap gap-2">
-                  {mission.skills.map((skill, index) => (
-                    <span
-                      key={index}
-                      className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-                    >
-                      {skill}
-                    </span>
-                  ))}
+                  {mission.skills && mission.skills.length > 0 ? (
+                    mission.skills.map((skill, index) => (
+                      <span
+                        key={index}
+                        className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                      >
+                        {skill}
+                      </span>
+                    ))
+                  ) : (
+                    <p className="text-gray-500 dark:text-gray-400">No skills specified</p>
+                  )}
                 </div>
               </div>
             </div>

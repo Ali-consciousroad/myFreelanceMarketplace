@@ -60,6 +60,7 @@ model Mission {
   dailyRate   Decimal       @db.Decimal(10, 2)
   timeframe   Int
   description String
+  skills      String[]      @default([])
   clientId    String
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
