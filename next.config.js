@@ -26,6 +26,14 @@ const nextConfig = {
       },
     ];
   },
+  productionBrowserSourceMaps: true,
+  webpack: (config, { dev, isServer }) => {
+    // Add source map support in development
+    if (dev && !isServer) {
+      config.devtool = 'eval-source-map';
+    }
+    return config;
+  },
 };
 
 module.exports = withPWA(nextConfig);

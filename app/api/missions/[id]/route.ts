@@ -71,18 +71,26 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const body = await request.json();
+    const { title, description, status, dailyRate, timeframe, skills } = await request.json();
     const updatedMission = await db.mission.update({
       where: {
         id: params.id,
       },
       data: {
-        status: body.status,
-        dailyRate: body.dailyRate,
-        timeframe: body.timeframe,
-        description: body.description,
-        skills: body.skills,
+        title,
+        description,
+        status,
+        dailyRate,
+        timeframe,
+        skills,
       },
+      include: {
+        client: {
+          include: {
+            user: true
+          }
+        }
+      }
     });
     return NextResponse.json(updatedMission);
   } catch (error) {

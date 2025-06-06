@@ -8,6 +8,11 @@ import { Mission as PrismaMission, MissionStatus } from '@prisma/client';
 interface Mission extends Omit<PrismaMission, 'dailyRate'> {
   dailyRate: number;
   skills: string[];
+  client?: {
+    user?: {
+      id: string;
+    };
+  };
 }
 
 export default function MissionPage({ params }: { params: { id: string } }) {
@@ -40,7 +45,7 @@ export default function MissionPage({ params }: { params: { id: string } }) {
           description: data.description,
           dailyRate: data.dailyRate,
           timeframe: data.timeframe,
-          skills: data.skills,
+          skills: data.skills || [],
           status: data.status
         });
       } catch (err) {
@@ -61,7 +66,14 @@ export default function MissionPage({ params }: { params: { id: string } }) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          title: formData.title,
+          description: formData.description,
+          dailyRate: formData.dailyRate,
+          timeframe: formData.timeframe,
+          skills: formData.skills || [],
+          status: formData.status
+        }),
       });
 
       if (!response.ok) {
@@ -71,6 +83,7 @@ export default function MissionPage({ params }: { params: { id: string } }) {
       const updatedMission = await response.json();
       setMission(updatedMission);
       setIsEditing(false);
+      router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update mission');
     }
@@ -146,7 +159,7 @@ export default function MissionPage({ params }: { params: { id: string } }) {
     );
   }
 
-  const isOwner = user?.id === mission.clientId;
+  const isOwner = user?.id === mission.client?.user?.id;
 
   return (
     <div className="min-h-screen p-8">
@@ -212,17 +225,20 @@ export default function MissionPage({ params }: { params: { id: string } }) {
             </div>
 
             <div>
-              <label htmlFor="skills" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Skills (comma-separated)
-              </label>
-              <input
-                type="text"
-                id="skills"
-                value={formData.skills.join(', ')}
-                onChange={(e) => setFormData({ ...formData, skills: e.target.value.split(',').map(s => s.trim()) })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-                required
-              />
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Skills</label>
+              <div className="mt-1">
+                <input
+                  type="text"
+                  id="skills"
+                  value={formData.skills.join(', ')}
+                  onChange={(e) => setFormData({ ...formData, skills: e.target.value.split(',').map(s => s.trim()).filter(s => s !== '') })}
+                  placeholder="e.g. React, Node.js, TypeScript"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                />
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  Enter skills separated by commas
+                </p>
+              </div>
             </div>
 
             <div className="flex justify-end space-x-4">
