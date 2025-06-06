@@ -25,7 +25,7 @@ export default async function Image() {
           justifyContent: 'center',
         }}
       >
-        Freelance Marketplace
+        Consciousroad
       </div>
     ),
     {

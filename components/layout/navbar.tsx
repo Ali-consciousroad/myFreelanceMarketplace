@@ -37,7 +37,7 @@ export default function NavBar() {
             height="30"
             className="mr-2 rounded-sm"
           />
-          <span className="font-bold tracking-tight">Freelance Marketplace</span>
+          <span className="font-bold tracking-tight">Consciousroad</span>
         </Link>
         <div className="flex items-center gap-4">
           <button

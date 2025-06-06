@@ -81,6 +81,7 @@ export async function PUT(
         dailyRate: body.dailyRate,
         timeframe: body.timeframe,
         description: body.description,
+        skills: body.skills,
       },
     });
     return NextResponse.json(updatedMission);
