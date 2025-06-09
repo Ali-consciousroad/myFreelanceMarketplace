@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import useScroll from "@/lib/hooks/use-scroll";
-import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
+import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import { LayoutDashboard, Sun, Moon } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -58,11 +58,12 @@ export default function NavBar() {
             {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
           </button>
           <SignedOut>
-            <SignInButton mode="modal">
-              <button className="rounded-full border border-white bg-transparent px-4 py-1.5 text-sm text-white transition-colors hover:bg-white hover:text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400">
-                Sign In
-              </button>
-            </SignInButton>
+            <Link
+              href="/sign-in"
+              className="rounded-full border border-white bg-transparent px-4 py-1.5 text-sm text-white transition-colors hover:bg-white hover:text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
+            >
+              Sign In
+            </Link>
           </SignedOut>
           <SignedIn>
             <Link
