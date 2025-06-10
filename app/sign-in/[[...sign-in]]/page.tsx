@@ -1,10 +1,16 @@
-import { SignIn } from "@clerk/nextjs";
+import { SignIn, auth } from "@clerk/nextjs";
+import { redirect } from "next/navigation";
 
-export default function Page() {
+export default async function Page() {
+  const { userId } = await auth();
+  
+  if (userId) {
+    redirect("/missions");
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900">
       <SignIn 
-        afterSignInUrl="/missions"
         appearance={{
           elements: {
             formButtonPrimary: 'bg-blue-600 hover:bg-blue-700 text-white',
@@ -17,6 +23,8 @@ export default function Page() {
             footerActionLink: 'text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300',
           }
         }}
+        afterSignInUrl="/missions"
+        redirectUrl="/missions"
       />
     </div>
   );
